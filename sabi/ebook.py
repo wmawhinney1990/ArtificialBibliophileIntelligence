@@ -1,8 +1,7 @@
 from xml.etree import ElementTree
-from typing import List, Union, Any
+from typing import List, Union
 from pathlib import Path
 from dataclasses import dataclass
-from pprint import pprint as pp
 
 from ebooklib import epub
 
@@ -43,7 +42,6 @@ class EbookMetadata:
     cover: str = None
 
     def __repr__(self):
-        #return self
         prefix = f"{self.__module__}.{type(self).__name__}"
         return f"<{prefix} title='{self.title}' author='{self.creator}' version={self.version}>"
 
@@ -66,24 +64,16 @@ class EbookMetadata:
         cover_elem = root.find('./guide/reference[@type="cover"]', namespaces=namespace)
         cover = cover_elem.get('href') if cover_elem is not None else None
 
-        return cls(
-                    uuid=uuid,
-                    version=float(version),
-                    title=title,
-                    creator=author,
-                    subjects=subjects,
-                    title_sort=title_sort,
-                    cover=cover
-               )
+        return cls(uuid=uuid, version=float(version), title=title, creator=author,
+                   subjects=subjects, title_sort=title_sort, cover=cover)
 @dataclass
 class Ebook:
     directory: Path
-    ebook: Any
+    ebook: epub.EpubBook
     contents: list
     metadata: EbookMetadata
 
     def __repr__(self):
-        #return self
         prefix = f"{self.__module__}.{type(self).__name__}"
         epub = self.ebook.title
         metadata = self.metadata
@@ -120,6 +110,7 @@ class EbookLibrary:
         return [ item.min for item in self.library ]
 
     def get(self, name: str):
+        """ Not Implemented. Return if match on ebook.title """
         print(f" -: EbookLibrary.get({name})")
         return None
 

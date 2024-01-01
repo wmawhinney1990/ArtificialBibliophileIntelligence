@@ -1,4 +1,5 @@
 import os
+import re
 import fnmatch
 from pathlib import Path
 
@@ -22,3 +23,12 @@ def extract_ebook_contents(epub_book: epub.EpubBook) -> list:
             soup = BeautifulSoup(item.get_content(), 'html.parser')
             chapters.append(soup.text)
     return chapters
+
+def sanitize_content(content):
+    text = re.sub('\n+', '\n', content)
+    clean_text = text.strip()
+    return clean_text
+
+def parse_output(text):
+    text = sanitize_content(text)
+    return text.split('\n')
