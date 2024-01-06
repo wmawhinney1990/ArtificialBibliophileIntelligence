@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Union, List
 from pathlib import Path
 
 @dataclass
 class Notes:
-    notes: List[str]
+    notes: Union[List[str], str] = None

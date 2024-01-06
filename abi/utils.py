@@ -1,5 +1,6 @@
 import os
 import re
+import nltk
 import fnmatch
 from typing import List, Union
 from pathlib import Path
@@ -61,3 +62,9 @@ def get_pickle_files(directory: Union[str, Path]) -> List[Path]:
     pickle_files = [file for file in directory.glob('*.pickle')]
 
     return pickle_files
+
+def blank_formating(string: str) -> str:
+    return re.sub(r'{.*?}', '', string)
+
+def tokenize(text: str) -> int:
+    return nltk.word_tokenize(text)

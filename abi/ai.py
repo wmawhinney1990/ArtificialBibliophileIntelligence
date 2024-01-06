@@ -11,14 +11,21 @@ class AI:
         self.verbose = verbose
 
     @property
-    def models(self):
-        return together.Models.list()
+    def model(self):
+        return "mistralai/Mixtral-8x7B-Instruct-v0.1"
+
+    @property
+    def info(self):
+        return together.models.Models.info(self.model)
+
+    @property
+    def context_window(self):
+        return self.info["context_length"]
 
     def prompt_mixtral(self, prompt: str):
-        model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
         prompt = f"<s> [INST] {prompt} [INST]"
         return together.Complete.create(
-                 prompt = prompt, model = model, 
+                 prompt = prompt, model = self.model, 
                  max_tokens = 8000, temperature = 0.7,
                  top_k = 50, # 0 means no filtering
                  top_p = 0.7, repetition_penalty = 1,
@@ -32,13 +39,17 @@ class AI:
             if self.verbose: utils.inline_print(f"Looking for a chapter ... | {i} / {len(chapters)}")
 
             results = self.prompt_mixtral(prompts.is_chapter.format(text=chapter))
-            #print(f"\n\n{results['output']['choices'][0]['text']}\n\n")
             result = utils.parse_output(results['output']['choices'][0]['text'])
 
             if utils.str_to_bool(result[0]):
                 # LOGGIGN NEEDS TO BE ESTABLISHED HERE
                 if self.verbose: utils.inline_print(result[-1], end="\n\n")
                 return i
+
+    def read_section(self, title, notes, section) -> str:
+        prompt = prompts.read_section.format(title=title, notes=notes, section=section)
+        results = self.prompt_mixtral(prompt)
+        return results['output']['choices'][0]['text']
 
     @classmethod
     def together_backend(cls, together_api_key, **kwargs):

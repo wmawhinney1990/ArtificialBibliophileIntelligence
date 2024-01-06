@@ -2,8 +2,9 @@
 
 import together
 import colorama
+from pprint import pprint as pp
 
-from abi import AI, Chapter, utils, prompts, Book
+from abi import AI, Chapter, utils, prompts, Book, Notes
 from abi.ebook import Ebook
 
 class Brain:
@@ -25,7 +26,9 @@ class Brain:
         return first_chapter_index, last_chapter_index
 
     def book_from_ebook(self, ebook: Ebook):
+        if self.verbose: print(colorama.Fore.LIGHTCYAN_EX)
         book = Book.from_ebook(ebook, verbose=self.verbose)
+        if self.verbose: print(colorama.Fore.RESET)
         if book.has_chapters:
             if self.verbose:
                 print(" ::> Book chapters loaded from file!")
@@ -34,7 +37,36 @@ class Brain:
             book.update_chapters(*chapter_indices)
         return book
 
-    def read_chapter(self, chapter: str, window: int=17, pace=15) -> None:
+    def read_chapter(self, chapter: Chapter, window: int=17, pace: int=15) -> Notes:
+        blank_formating = utils.blank_formating(prompts.read_section) # I feel like prompts.read_section should not be here
+        context_window = self.ai.context_window                       # Or query the ai.prompt_mistral directly
+        used_tokens = len(utils.tokenize(blank_formating))
+        window = context_window - used_tokens
+        maths = window / chapter.len
+
+        notes = Notes()
+        if maths > 1:
+            results = self.ai.read_section(chapter.title, notes.notes, chapter.contents)
+            if self.verbose:
+                print(colorama.Fore.RED)
+                print(f"CHAPTER {chapter.index + 1}")
+                print(colorama.Fore.LIGHTRED_EX)
+                print(f"{results}\n")
+                print(colorama.Fore.RESET)
+
+            chapter.notes = results
+            return results
+        else:
+            # This is a way here.
+            # Imagine the context window as 100 and the tokens as 160
+            # the result would be two windows because 100 / 160 = 0.625
+            # Imagine knowing how many section to cut it into
+            # Then grabbing chapter.paragraphs
+            # section slowly absorbs one paragraph at a time, knowing what context not to go beyond
+            # In this way, the chapter can be reasonably split up into sections and ran thru the prompt
+            return
+
+    def read_chapter_old(self, chapter: str, window: int=17, pace=15) -> None:
         paragraphs = chapter.split("\n")
         chapter = Chapter(chapter, paragraphs)
         for chunk in utils.get_slices(paragraphs, window, window-pace):

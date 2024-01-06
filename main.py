@@ -22,4 +22,8 @@ brain = abi.Brain.from_together(os.getenv("together_key"), verbose=VERBOSE)
 book = brain.book_from_ebook(library[0])
 
 ch1 = book[0]
-ch2 = book[0]
+ch2 = book[1]
+
+notes = brain.read_chapter(ch1)
+
+q = notes

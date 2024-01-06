@@ -13,14 +13,14 @@ class Chapter:
     title: str
     index: int
     contents: str
+    notes: str = None
     
     def __repr__(self):
         return f'Chapter(title={self.title!r}, index={self.index!r}, tokens={len(self.tokens)!r})'
 
-
     @property
     def tokens(self) -> List[str]:
-        return nltk.word_tokenize(self.contents)
+        return utils.tokenize(self.contents)
 
     @property
     def len(self):
