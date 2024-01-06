@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from ebooklib import epub
 
-from sabi import utils
+from abi import utils
 
 @dataclass
 class EbookMetadata:
@@ -70,8 +70,9 @@ class EbookMetadata:
 class Ebook:
     directory: Path
     ebook: epub.EpubBook
-    contents: list
+    title: str
     metadata: EbookMetadata
+    _contents: list = None
 
     def __repr__(self):
         prefix = f"{self.__module__}.{type(self).__name__}"
@@ -79,6 +80,12 @@ class Ebook:
         metadata = self.metadata
         version = self.ebook.version
         return f"<{prefix} epub='{epub}' metadata={metadata} version={version}>"
+
+    @property
+    def contents(self):
+        if self._contents is None:
+            self._contents = utils.extract_ebook_contents(self.ebook)
+        return self._contents
 
     @property
     def min(self):
@@ -92,11 +99,10 @@ class Ebook:
     def from_dir(cls, directory: Union[str, Path]) -> "Ebook":
         directory = Path(directory)
         ebook = epub.read_epub( list(directory.glob('**/*.epub'))[0] )
-        contents = utils.extract_ebook_contents(ebook)
         metadata = EbookMetadata.from_file( list(directory.glob('**/metadata.opf'))[0] )
-        return cls(directory, ebook, contents, metadata)
+        return cls(directory, ebook, ebook.title, metadata)
     
-
+# Depricated
 class EbookLibrary:
 
     def __init__(self, ebooks: list):
@@ -115,6 +121,6 @@ class EbookLibrary:
         return None
 
     @classmethod
-    def from_dir(cls, directory: Union[str, Path]):
-        ebooks = [ Ebook.from_dir(ebook_dir) for ebook_dir in utils.find_epub_directories(directory) ]
+    def from_dir(cls, directory: Union[str, Path], index: Union[None, int]) -> "EbookLibrary":
+        ebooks = [ Ebook.from_dir(ebook_dir) for ebook_dir in utils.find_epub_directories(directory, index) ]
         return cls(ebooks)
