@@ -1,8 +1,10 @@
 # Artificial Bibliophile Intelligence
 
+from typing import Optional
+
 import together
 
-from abi import utils, prompts
+from abi import utils, prompting
 
 class AI:
 
@@ -32,13 +34,18 @@ class AI:
                  stop = ["</s>"] # add any sequence you want to stop generating at. 
                )
 
+    def run_prompt(self, prompt):
+        results = self.prompt_mixtral(prompt)
+        return results['output']['choices'][0]['text']
+
     def find_chapter(self, chapters: list) -> int:
+        """Return index of first confirmed chapter."""
         for i, chapter in enumerate(chapters):
             if len(chapter) > 500: chapter = chapter[:500]
 
-            if self.verbose: utils.inline_print(f"Looking for a chapter ... | {i} / {len(chapters)}")
+            if self.verbose: utils.inline_print(f"Looking for a chapter ... | {i+1} / {len(chapters)}")
 
-            results = self.prompt_mixtral(prompts.is_chapter.format(text=chapter))
+            results = self.prompt_mixtral(prompting.is_chapter.format(text=chapter))
             result = utils.parse_output(results['output']['choices'][0]['text'])
 
             if utils.str_to_bool(result[0]):
@@ -46,10 +53,20 @@ class AI:
                 if self.verbose: utils.inline_print(result[-1], end="\n\n")
                 return i
 
-    def read_section(self, title, notes, section) -> str:
-        prompt = prompts.read_section.format(title=title, notes=notes, section=section)
-        results = self.prompt_mixtral(prompt)
-        return results['output']['choices'][0]['text']
+    def summarize(self, *args: Optional[str]) -> str:
+        #fix the sammarizers
+        items = [arg for arg in args if arg is not None]
+
+        if len(items) == 0:
+            return None
+
+        if len(items) == 1:
+            return items[0]
+
+        text = '\n'.join(arg for arg in args if arg is not None)
+        prompt = prompting.summarize.format(info=text)
+        print(prompt)
+        return self.run_prompt(prompt)
 
     @classmethod
     def together_backend(cls, together_api_key, **kwargs):

@@ -4,7 +4,7 @@ import together
 import colorama
 from pprint import pprint as pp
 
-from abi import AI, Chapter, utils, prompts, Book, Notes
+from abi import AI, Chapter, utils, prompting, Book
 from abi.ebook import Ebook
 
 class Brain:
@@ -13,12 +13,14 @@ class Brain:
         self._ai = ai
         if verbose: colorama.init()
         self.verbose = verbose
+        self.sumt = {}
 
     @property
     def ai(self):
         return self._ai
 
     def extract_start_end_indices(self, book_contents: list) -> tuple:
+        """Returns a tuple of the first_chapter and the last_chapter"""
         if self.verbose: print(colorama.Fore.LIGHTGREEN_EX)
         first_chapter_index = self.ai.find_chapter(book_contents)
         last_chapter_index = len(book_contents) - self.ai.find_chapter(book_contents[::-1])
@@ -37,44 +39,53 @@ class Brain:
             book.update_chapters(*chapter_indices)
         return book
 
-    def read_chapter(self, chapter: Chapter, window: int=17, pace: int=15) -> Notes:
-        blank_formating = utils.blank_formating(prompts.read_section) # I feel like prompts.read_section should not be here
-        context_window = self.ai.context_window                       # Or query the ai.prompt_mistral directly
-        used_tokens = len(utils.tokenize(blank_formating))
-        window = context_window - used_tokens
-        maths = window / chapter.len
+    def read_chapter(self, chapter: Chapter) -> None:
 
-        notes = Notes()
-        if maths > 1:
-            results = self.ai.read_section(chapter.title, notes.notes, chapter.contents)
+        prev_summary = None if chapter.chapter == 1 else chapter.prev_chapter.summary
+        summary_so_far = [] if prev_summary is None else [prev_summary]
+
+        prompt_temptlate = prompting.Template(chapter.notes.prompt_template)
+        prompt_temptlate(title=chapter.title)
+
+        used_tokens = len(utils.tokenize(str(prompt_temptlate)))
+        max_context = (self.ai.context_window - used_tokens) / 2
+
+        sections = chapter.sectionize(max_context, overlap=3)
+        for i, section in enumerate(sections):
+
             if self.verbose:
-                print(colorama.Fore.RED)
-                print(f"CHAPTER {chapter.index + 1}")
-                print(colorama.Fore.LIGHTRED_EX)
-                print(f"{results}\n")
-                print(colorama.Fore.RESET)
+                print(f" ::> Reading section {i+1} of {len(sections)} ...")
 
-            chapter.notes = results
-            return results
-        else:
-            # This is a way here.
-            # Imagine the context window as 100 and the tokens as 160
-            # the result would be two windows because 100 / 160 = 0.625
-            # Imagine knowing how many section to cut it into
-            # Then grabbing chapter.paragraphs
-            # section slowly absorbs one paragraph at a time, knowing what context not to go beyond
-            # In this way, the chapter can be reasonably split up into sections and ran thru the prompt
-            return
+            summary = self.ai.summarize(*summary_so_far)
+            
+            prompt_temptlate(summary=summary, section=section)
+            results = self.ai.run_prompt(prompt_temptlate.prompt)
+            
+            chapter.notes.take_notes(results)
+            summary_so_far.append(chapter.notes.summary)
 
-    def read_chapter_old(self, chapter: str, window: int=17, pace=15) -> None:
-        paragraphs = chapter.split("\n")
-        chapter = Chapter(chapter, paragraphs)
-        for chunk in utils.get_slices(paragraphs, window, window-pace):
-            print(chunk)
+        if "update_summary" in dir(chapter.notes):
+            summary = ai.summarize(*summary_so_far)
+            chapter.notes.update_summary(summary)
 
-    def read_book(self, book: Book, callbacks) -> None:
-        for chapter in book.chapters:
-            result = read_chapter(chapter)
+        chapter.save_notes()
+
+        if self.verbose:
+            #print(colorama.Fore.RED)
+            print(colorama.Fore.LIGHTRED_EX)
+            print(f"Chapter {chapter.chapter} done. Notes saved -> {chapter.notes.savepath!r}")
+            print(colorama.Fore.RESET)
+
+    def read_book(self, book: Book) -> None:
+        for chapter in book:
+            if self.verbose:
+                print(colorama.Fore.MAGENTA)
+                print(f" ::> READING CHAPTER {chapter.chapter}")
+                
+
+            self.read_chapter(chapter)
+
+        print(colorama.Fore.RESET)
 
     @classmethod
     def from_together(cls, api_key: str, **kwargs) -> "Brain":
