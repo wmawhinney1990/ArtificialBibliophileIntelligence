@@ -2,6 +2,10 @@
 
 import together
 import colorama
+
+import os
+import glob
+from pathlib import Path
 from pprint import pprint as pp
 
 from abi import AI, Chapter, utils, prompting, Book
@@ -39,6 +43,28 @@ class Brain:
             book.update_chapters(*chapter_indices)
         return book
 
+    def purge_notes(self, notes_path):
+        notes_path = Path(notes_path)
+
+        if not notes_path.exists():
+            raise ValueError(f"The provided path '{str(notes_path)!r}' does not exist.")
+        if not notes_path.is_dir():
+            raise ValueError(f"The provided path '{str(notes_path)!r}' is not a directory.")
+
+        file_types = ['*.pdf', '*.pkl']
+    
+        for file_type in ['*.pdf', '*.pkl']:
+            files = glob.glob(str(notes_path / file_type))
+            
+            for f in files:
+                try:
+                    os.remove(f)
+                    if self.verbose:
+                        print(f"File {f} has been removed successfully")
+                    
+                except OSError as e:
+                    print("Error:", e.strerror)
+
     def read_chapter(self, chapter: Chapter) -> None:
 
         prev_summary = None if chapter.chapter == 1 else chapter.prev_chapter.summary
@@ -60,6 +86,11 @@ class Brain:
             
             prompt_temptlate(summary=summary, section=section)
             results = self.ai.run_prompt(prompt_temptlate.prompt)
+
+            if self.verbose:
+                print(colorama.Fore.LIGHTYELLOW_EX)
+                print(f"\n{results!r}\n")
+                print(colorama.Fore.RESET)
             
             chapter.notes.take_notes(results)
             summary_so_far.append(chapter.notes.summary)
@@ -71,13 +102,17 @@ class Brain:
         chapter.save_notes()
 
         if self.verbose:
-            #print(colorama.Fore.RED)
             print(colorama.Fore.LIGHTRED_EX)
             print(f"Chapter {chapter.chapter} done. Notes saved -> {chapter.notes.savepath!r}")
             print(colorama.Fore.RESET)
 
     def read_book(self, book: Book) -> None:
+
         for chapter in book:
+
+            if chapter.chapter == 1:
+                self.purge_notes(chapter.notes.savepath.parent)
+
             if self.verbose:
                 print(colorama.Fore.MAGENTA)
                 print(f" ::> READING CHAPTER {chapter.chapter}")

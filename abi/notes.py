@@ -5,6 +5,8 @@ from pathlib import Path
 import json
 import re
 
+import pickle
+
 from abi.prompting import basic_notes
 
 @dataclass
@@ -54,5 +56,13 @@ class BasicNotes(BaseNotes):
 
                 if match:
                     self.qa.update(json.loads(match.group()))
+
+    @classmethod
+    def from_pickle(cls, pickle_path: Path) -> "BasicNotes":
+        pickle_path = Path(pickle_path)
+        if pickle_path.is_file():
+            with open(pickle_path, "rb") as f:
+                return pickle.load(f)
+
 
 __all__ = ['BasicNotes']

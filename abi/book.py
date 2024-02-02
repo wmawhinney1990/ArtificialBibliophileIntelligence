@@ -142,7 +142,7 @@ class Book:
             next_chapter = None if index == chapter_count else lambda: self[index+1]
             if self.verbose: print(f"  ::> Book[{index}]: prev = {index-1}, next = {index+1}")
 
-            notes = self.directory / Notes.__name__.lower() / f"chapter{chapter:03}.pickle"
+            notes = self.directory / Notes.__name__.lower() / f"chapter{chapter:03}.pkl"
 
             chapter = Chapter(self.title, chapter, index+self._first_chapter, contents[index], notes, prev_chapter, next_chapter)
 
@@ -162,6 +162,12 @@ class Book:
 
             for i in range(self._last_chapter - self._first_chapter):
                 yield self[i]
+
+    @property    
+    def notespath(self):
+        notespath = self[0].notes.savepath.parent
+        self._chapters_cache = {}
+        return notespath
 
     @property
     def valid_chapters(self) -> bool:
@@ -192,8 +198,10 @@ class Book:
     def pickle_filename(self):
         """Returns path for pickle file """
 
-        filename = f"{self.title.lower().replace(' ', '_')}.pickle"
+        filename = f"{self.title.lower().replace(' ', '_')}.pkl"
         return self.directory / filename
+
+
 
     def get_chapter(self, chapter: int):
         """Returns chapter based on chapter number."""

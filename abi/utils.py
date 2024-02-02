@@ -47,11 +47,11 @@ def get_slices(stuff: list, window: int=17, overlap: int=2):
 
 def get_pickle_files(directory: Union[str, Path]) -> List[Path]:
     """
-    Utility function to return all .pickle files from the given directory.
+    Utility function to return all .pkl files from the given directory.
 
     :param directory (Union[str, Path]): The path of the directory.
 
-    :return (List[Path]): A list of paths for each .pickle file in the directory.
+    :return (List[Path]): A list of paths for each .pkl file in the directory.
     """
 
     # Convert string path to Path object if necessary
@@ -59,7 +59,7 @@ def get_pickle_files(directory: Union[str, Path]) -> List[Path]:
         directory = Path(directory)
 
     # Get all .pickle files in the specified directory 
-    pickle_files = [file for file in directory.glob('*.pickle')]
+    pickle_files = [file for file in directory.glob('*.pkl')]
 
     return pickle_files
 

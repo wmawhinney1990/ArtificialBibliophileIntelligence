@@ -3,15 +3,13 @@
 
 import os
 from pathlib import Path
-
 from pprint import pprint as pp
-
+import datetime
 import dotenv
 
 import abi
 
 dotenv.load_dotenv()
-#together.api_key = os.getenv("together_key")
 
 VERBOSE = True
 
@@ -20,20 +18,29 @@ library = abi.ebook.EbookLibrary.from_dir(ebooks_directory, 3)
 
 brain = abi.Brain.from_together(os.getenv("together_key"), verbose=VERBOSE)
 
-book = brain.book_from_ebook(library[0])
 
-#ch1 = book[0]
-#brain.read_chapter(ch1)
+def read_book(book):
+    print(f"The AI reads {book.title}!")
+    st = datetime.datetime.now()
+    brain.read_book(book)           # How long does it take an AI to read a book?
+    et = datetime.datetime.now()
+    # And difference it
+    elapsed_seconds = (et - st).total_seconds()
+    minutes, seconds = divmod((et - st).total_seconds(), 60)
+    print(f"::> Reading '{book.title}' only took this AI {minutes} minute(s) {seconds:.2f} second(s) !!")
 
-start_time = datetime.datetime.now()
 
-# Time this shit. How long does it take an AI to read a book?
-brain.read_book(book)
+if __name__ == "__main__":
+    book = brain.book_from_ebook(library[0])
+    notes_dir = book.notespath
 
-end_time = datetime.datetime.now()
+    ####    FOR TESTING
+    # ch1 = book[0]
+    # brain.read_chapter(ch1)
+    ####
 
-# And difference it
-elapsed_seconds = (end_time - start_time).total_seconds()
-es = elapsed_seconds
+    # Uncomment this line to use the AI to read the book
+    #read_book(book)
+    book_report = abi.ReportMaker.make_report_from_notes('report', notes_dir)
 
-#t = abi.prompting.Template(abi.prompting.read_section)
+    print(f"\n\n{book_report} ...", end="\n\n")
