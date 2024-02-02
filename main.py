@@ -1,4 +1,4 @@
-# Artificial Bibliophile Intelligence
+# ArtificialBibliophileIntelligence
 # Build to showocase how an AI can think
 
 import os
