@@ -1,4 +1,4 @@
-# ArtificialBibliophileIntelligence
+# Artificial Bibliophile Intelligence
 # Build to showocase how an AI can think
 
 import os
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     ####
 
     # Uncomment this line to use the AI to read the book
-    #read_book(book)
+    read_book(book)
     book_report = abi.ReportMaker.make_report_from_notes('report', notes_dir)
 
     print(f"\n\n{book_report} ...", end="\n\n")
