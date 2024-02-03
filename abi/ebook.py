@@ -121,6 +121,6 @@ class EbookLibrary:
         return None
 
     @classmethod
-    def from_dir(cls, directory: Union[str, Path], index: Union[None, int]) -> "EbookLibrary":
+    def from_dir(cls, directory: Union[str, Path], index: Union[None, int]=None) -> "EbookLibrary":
         ebooks = [ Ebook.from_dir(ebook_dir) for ebook_dir in utils.find_epub_directories(directory, index) ]
         return cls(ebooks)

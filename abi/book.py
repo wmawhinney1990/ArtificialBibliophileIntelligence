@@ -135,6 +135,8 @@ class Book:
 
         chapter_count = self._last_chapter-self._first_chapter
 
+        # Implement code for indes = -1
+
         if 0 <= index <= chapter_count:
             contents = self.contents[self._first_chapter:self._last_chapter]
 

@@ -46,6 +46,9 @@ class Brain:
     def purge_notes(self, notes_path):
         notes_path = Path(notes_path)
 
+        # check if dir exists before running logic
+        # else, create the directory
+
         if not notes_path.exists():
             raise ValueError(f"The provided path '{str(notes_path)!r}' does not exist.")
         if not notes_path.is_dir():
