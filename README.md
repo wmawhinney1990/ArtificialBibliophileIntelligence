@@ -29,7 +29,7 @@ the directory of this Calibre is requred in the `.env` file
 2. Run either `python main.py` or `python -i main.py`
 
 #### Examples
-See [`/examples`](https://github.com/wmawhinney1990/ArtificialBibliophileIntelligence/examples) for PDF examples of books reports
+See `/examples` for PDF examples of books reports
  
 
 ### Development Path
